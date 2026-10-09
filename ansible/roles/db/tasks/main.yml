@@ -1,0 +1,32 @@
+- name: Instalar MariaDB
+  ansible.builtin.apt:
+    name: [mariadb-server, mariadb-client]
+    state: present
+
+- name: "INSEGURO: escuchar en todas las interfaces"
+  ansible.builtin.lineinfile:
+    path: /etc/mysql/mariadb.conf.d/50-server.cnf
+    regexp: '^bind-address'
+    line: 'bind-address = 0.0.0.0'
+  notify: reiniciar mariadb
+
+- name: Asegurar que MariaDB está iniciado
+  ansible.builtin.sysvinit:
+    name: mariadb
+    state: started
+
+- name: Aplicar reinicios pendientes antes de configurar usuarios
+  ansible.builtin.meta: flush_handlers
+
+- name: Comprobar si existe root remoto
+  ansible.builtin.command: >
+    mariadb -N -e "SELECT COUNT(*) FROM mysql.user WHERE user='root' AND host='%'"
+  register: root_remoto
+  changed_when: false
+
+- name: "INSEGURO: crear root remoto sin contraseña"
+  ansible.builtin.command: >
+    mariadb -e "CREATE USER 'root'@'%' IDENTIFIED BY '';
+                GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+                FLUSH PRIVILEGES;"
+  when: root_remoto.stdout == "0"

@@ -1,0 +1,15 @@
+- name: Configuración base de todos los servidores
+  hosts: objetivos
+  roles: [common]
+
+- name: Servidor web
+  hosts: web
+  roles: [web]
+
+- name: Servidor de base de datos
+  hosts: db
+  roles: [db]
+
+- name: Servidor legacy
+  hosts: legacy
+  roles: [legacy]

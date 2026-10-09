@@ -1,0 +1,2 @@
+- name: recargar sshd
+  ansible.builtin.command: kill -HUP 1

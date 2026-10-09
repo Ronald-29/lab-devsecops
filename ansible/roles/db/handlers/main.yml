@@ -1,0 +1,4 @@
+- name: reiniciar mariadb
+  ansible.builtin.sysvinit:
+    name: mariadb
+    state: restarted

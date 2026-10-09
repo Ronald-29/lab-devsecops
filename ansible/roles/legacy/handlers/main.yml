@@ -1,0 +1,10 @@
+- name: reiniciar vsftpd
+  ansible.builtin.sysvinit:
+    name: vsftpd
+    state: restarted
+
+# NUEVO
+- name: reiniciar inetd
+  ansible.builtin.sysvinit:
+    name: openbsd-inetd
+    state: restarted

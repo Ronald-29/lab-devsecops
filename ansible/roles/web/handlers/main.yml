@@ -1,0 +1,4 @@
+- name: reiniciar nginx
+  ansible.builtin.sysvinit:
+    name: nginx
+    state: restarted

@@ -1,0 +1,23 @@
+- name: Actualizar la lista de paquetes
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Instalar utilidades básicas
+  ansible.builtin.apt:
+    name: [curl, ca-certificates, procps, less]
+    state: present
+
+- name: "INSEGURO: contraseña débil para root (toor)"
+  ansible.builtin.user:
+    name: root
+    password: "{{ 'toor' | password_hash('sha512', 'labsalt1234') }}"
+
+- name: "INSEGURO: permitir login de root y por contraseña en SSH"
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/00-lab.conf
+    content: |
+      PermitRootLogin yes
+      PasswordAuthentication yes
+    mode: "0644"
+  notify: recargar sshd

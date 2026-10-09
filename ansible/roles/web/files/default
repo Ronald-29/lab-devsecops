@@ -1,0 +1,14 @@
+server {
+    listen 80 default_server;
+    root /var/www/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # INSEGURO: carpeta de respaldos con listado de archivos activado
+    location /backup/ {
+        autoindex on;
+    }
+}

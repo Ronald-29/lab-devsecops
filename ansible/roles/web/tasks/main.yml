@@ -1,0 +1,34 @@
+- name: Instalar Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Publicar la configuración del sitio
+  ansible.builtin.copy:
+    src: default
+    dest: /etc/nginx/sites-available/default
+    mode: "0644"
+  notify: reiniciar nginx
+
+- name: Página principal
+  ansible.builtin.copy:
+    dest: /var/www/html/index.html
+    content: "<h1>web01 - Laboratorio DevSecOps</h1>\n"
+    mode: "0644"
+
+- name: Crear carpeta de respaldos
+  ansible.builtin.file:
+    path: /var/www/html/backup
+    state: directory
+    mode: "0755"
+
+- name: "INSEGURO: dejar un respaldo de base de datos expuesto"
+  ansible.builtin.copy:
+    dest: /var/www/html/backup/clientes.sql.bak
+    content: "-- respaldo de prueba (datos ficticios)\n"
+    mode: "0644"
+
+- name: Asegurar que Nginx está iniciado
+  ansible.builtin.sysvinit:
+    name: nginx
+    state: started
