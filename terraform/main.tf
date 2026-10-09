@@ -53,6 +53,10 @@ resource "docker_container" "servidor" {
   image    = docker_image.target.image_id
   restart  = "unless-stopped"
 
+  sysctls = {
+    "net.ipv4.tcp_timestamps" = "0"
+  }
+
   networks_advanced {
     name         = docker_network.lab.name
     ipv4_address = each.value.ip
