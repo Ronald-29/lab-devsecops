@@ -3,11 +3,11 @@
     name: [mariadb-server, mariadb-client]
     state: present
 
-- name: "INSEGURO: escuchar en todas las interfaces"
+- name: "SEGURO: escuchar solo en el propio servidor"
   ansible.builtin.lineinfile:
     path: /etc/mysql/mariadb.conf.d/50-server.cnf
     regexp: '^bind-address'
-    line: 'bind-address = 0.0.0.0'
+    line: 'bind-address = 127.0.0.1'
   notify: reiniciar mariadb
 
 - name: Asegurar que MariaDB está iniciado
@@ -24,9 +24,7 @@
   register: root_remoto
   changed_when: false
 
-- name: "INSEGURO: crear root remoto sin contraseña"
+- name: "SEGURO: eliminar el root remoto"
   ansible.builtin.command: >
-    mariadb -e "CREATE USER 'root'@'%' IDENTIFIED BY '';
-                GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
-                FLUSH PRIVILEGES;"
-  when: root_remoto.stdout == "0"
+    mariadb -e "DROP USER 'root'@'%'; FLUSH PRIVILEGES;"
+  when: root_remoto.stdout == "1"

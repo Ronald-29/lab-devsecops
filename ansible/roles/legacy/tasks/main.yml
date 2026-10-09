@@ -1,32 +1,17 @@
-- name: "INSEGURO: instalar servicios antiguos sin cifrado"
-  ansible.builtin.apt:
-    name: [vsftpd, openbsd-inetd, inetutils-telnetd, netbase]   # NUEVO: netbase
-    state: present
+- name: Obtener la lista de paquetes instalados
+  ansible.builtin.package_facts:
 
-- name: Configurar vsftpd
-  ansible.builtin.lineinfile:
-    path: /etc/vsftpd.conf
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-  loop:
-    - { regexp: '^#?listen=',           line: 'listen=YES' }
-    - { regexp: '^#?listen_ipv6=',      line: 'listen_ipv6=NO' }
-    - { regexp: '^#?anonymous_enable=', line: 'anonymous_enable=YES' }
-  notify: reiniciar vsftpd
-
-# NUEVO: declarar Telnet explícitamente en inetd
-- name: "INSEGURO: habilitar Telnet en inetd"
-  ansible.builtin.lineinfile:
-    path: /etc/inetd.conf
-    regexp: '^#?\s*telnet\s'
-    line: 'telnet  stream  tcp  nowait  root  /usr/sbin/telnetd  telnetd'
-  notify: reiniciar inetd
-
-- name: Aplicar reinicios pendientes
-  ansible.builtin.meta: flush_handlers
-
-- name: Iniciar FTP y Telnet
+- name: "SEGURO: detener los servicios inseguros si están instalados"
   ansible.builtin.sysvinit:
-    name: "{{ item }}"
-    state: started
-  loop: [vsftpd, openbsd-inetd]
+    name: "{{ item.servicio }}"
+    state: stopped
+  loop:
+    - { paquete: vsftpd,        servicio: vsftpd }
+    - { paquete: openbsd-inetd, servicio: openbsd-inetd }
+  when: item.paquete in ansible_facts.packages
+
+- name: "SEGURO: desinstalar FTP y Telnet"
+  ansible.builtin.apt:
+    name: [vsftpd, openbsd-inetd, inetutils-telnetd]
+    state: absent
+    purge: true

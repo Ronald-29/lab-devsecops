@@ -3,21 +3,31 @@
     update_cache: true
     cache_valid_time: 3600
 
+- name: "SEGURO: instalar actualizaciones de seguridad"
+  ansible.builtin.apt:
+    upgrade: dist
+
 - name: Instalar utilidades básicas
   ansible.builtin.apt:
     name: [curl, ca-certificates, procps, less]
     state: present
 
-- name: "INSEGURO: contraseña débil para root (toor)"
+- name: "SEGURO: bloquear la contraseña de root (solo acceso con llave)"
   ansible.builtin.user:
     name: root
-    password: "{{ 'toor' | password_hash('sha512', 'labsalt1234') }}"
+    password: "*"
 
-- name: "INSEGURO: permitir login de root y por contraseña en SSH"
+- name: "SEGURO: endurecer la configuración de SSH"
   ansible.builtin.copy:
     dest: /etc/ssh/sshd_config.d/00-lab.conf
     content: |
-      PermitRootLogin yes
-      PasswordAuthentication yes
+      PermitRootLogin prohibit-password
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com
     mode: "0644"
   notify: recargar sshd
+
+- name: Validar la configuración de SSH antes de recargarla
+  ansible.builtin.command: /usr/sbin/sshd -t
+  changed_when: false
