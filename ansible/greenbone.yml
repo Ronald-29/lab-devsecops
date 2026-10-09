@@ -1,0 +1,36 @@
+- name: Conectar Greenbone a la red del laboratorio
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    red_lab: lab-net
+    contenedores_escaner:
+      - greenbone-community-edition-ospd-openvas-1
+      - greenbone-community-edition-openvasd-1
+
+  tasks:
+    - name: Comprobar que la red del laboratorio existe
+      community.docker.docker_network_info:
+        name: "{{ red_lab }}"
+      register: info_red
+
+    - name: Detenerse si Terraform no ha creado la red
+      ansible.builtin.assert:
+        that: info_red.exists
+        fail_msg: "La red {{ red_lab }} no existe. Ejecuta primero terraform apply."
+
+    - name: Conectar los contenedores del escáner a la red
+      community.docker.docker_network:
+        name: "{{ red_lab }}"
+        connected: "{{ contenedores_escaner }}"
+        appends: true
+
+    - name: Obtener la IP del escáner en la red del laboratorio
+      community.docker.docker_container_info:
+        name: greenbone-community-edition-ospd-openvas-1
+      register: info_escaner
+
+    - name: Mostrar la IP asignada
+      ansible.builtin.debug:
+        msg: "IP del escáner en {{ red_lab }}: {{ info_escaner.container.NetworkSettings.Networks[red_lab].IPAddress }}"
