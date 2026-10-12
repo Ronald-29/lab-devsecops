@@ -201,6 +201,6 @@ La duración del escaneo bajó de 20 a 11 minutos: menos superficie de ataque, m
 
 ## Pendientes
 
-- [ ] Agregar `docs/riesgos-aceptados.md`.
-- [ ] Prueba final: `make reconstruir; echo "Código de salida: $?"`.
-- [ ] Commit y etiqueta `v4-automatizado`.
+- [x] Agregar `docs/riesgos-aceptados.md`.
+- [x] Prueba final: `make reconstruir; echo "Código de salida: $?"`.
+- [x] Commit y etiqueta `v4-automatizado`.
