@@ -235,3 +235,27 @@ MariaDB con root remoto sin contraseña) para Greenbone tuviera fallas reales qu
 
 El repositorio no contiene secreto: el state de Terraform, las llaves SSH, los reportes y la
 contraseña de Greenbone se generan o guardan localmente y estan excluidos por '.gitignore'.
+
+## Fase 9A: integración continua con GitHub Actions
+
+El workflow `.github/workflows/calidad.yml` revisa el código en cada push y pull request,
+sin ejecutarlo (análisis estático), en los servidores de GitHub:
+
+| Trabajo | Herramienta | Qué revisa |
+|---|---|---|
+| Terraform | `terraform fmt` y `validate` | Formato y validez del código |
+| Ansible | `ansible-playbook --syntax-check` | Sintaxis de los playbooks |
+| Secretos | gitleaks | Llaves, tokens y contraseñas en todo el historial |
+| Seguridad IaC | Checkov | Configuraciones inseguras en Terraform y el Dockerfile |
+
+Primera ejecución de Checkov: 25 superadas y 4 fallidas. Se corrigieron dos (se quitó `sudo`
+y se agregó `HEALTHCHECK`) y se aceptaron dos con justificación (root y puerto 22, riesgo
+R-003). Resultado final: 27 superadas, 0 fallidas, 2 excepciones; Checkov ahora bloquea.
+
+Lecciones:
+
+- YAML define la estructura con la indentación: un archivo puede ser YAML válido y no ser
+  un workflow válido.
+- Un pipeline verde con `soft_fail` no significa cero hallazgos: hay que leer qué midió.
+- Análisis estático (código) y dinámico (Greenbone) se complementan: quitar `sudo` solo se
+  confirmó seguro y funcional tras reconstruir y escanear.
