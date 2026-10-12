@@ -7,6 +7,7 @@ En Greenbone se implementa como un override; este archivo es su respaldo version
 |---|---|---|---|---|---|
 | R-001 | ICMP Timestamp Reply Information Disclosure | 172.30.0.10-12 | 2.1 Low a Log | 2026-10-09 | 2027-01-07 |
 | R-002 | Missing Linux Kernel mitigations for GDS (Downfall, INTEL-SA-00828) | Host anfitrión (visto en 172.30.0.10-12) | 6.5 Medium a Log | 2026-10-12 | 2027-01-10 |
+| R-003 | Checkov CKV_DOCKER_3 y CKV_DOCKER_1 (contenedor como root, puerto 22 expuesto) | Imagen lab-target | Excepción de análisis estático | 2026-10-12 | 2027-01-10 |
 
 ## R-001: ICMP Timestamp Reply
 
@@ -33,4 +34,14 @@ En Greenbone se implementa como un override; este archivo es su respaldo version
 - Condición: en producción o en hardware compartido NO se acepta; se exige CPU no vulnerable.
 - Solución definitiva: renovar el hardware.
 - Implementación: override en Greenbone (nueva severidad Log, vigencia de 90 días).
+- Responsable: Ronal
+
+## R-003: excepciones de Checkov en la imagen de los servidores
+
+- Hallazgos: CKV_DOCKER_3 (no hay usuario distinto de root) y CKV_DOCKER_1 (puerto 22 expuesto).
+- Motivo: el proceso principal es sshd, que necesita root, y SSH es la interfaz de Ansible
+  y del escaneo autenticado. Sin ellos el laboratorio no funciona.
+- Mitigaciones: login de root solo con llave, sin contraseñas, MACs fuertes, usuario
+  scanner sin privilegios y la red lab-net aislada (sin puertos publicados al host).
+- Implementación: comentarios checkov:skip en el Dockerfile, con su justificación.
 - Responsable: Ronal

@@ -61,4 +61,4 @@ jobs:
         with:
           directory: terraform
           framework: terraform,dockerfile
-          soft_fail: true
+          soft_fail: false
