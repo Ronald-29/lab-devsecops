@@ -227,3 +227,11 @@ Lecciones:
   fabricante, se aceptó con condiciones (R-002 en `docs/riesgos-aceptados.md`).
 - Un override debe tener Task y Result en Any para aplicar a escaneos futuros.
 - La ausencia de hallazgos no prueba seguridad: hay que confirmar que el escaneo pudo medir.
+## Aviso de seguridad
+
+Este repositorio es un laboratorio educativo. La etiqueta 'v1-inseguro' contiene
+configuracion **vulnerables a proposito** (por ejemplo, la contraseña 'toor' para root y)
+MariaDB con root remoto sin contraseña) para Greenbone tuviera fallas reales que detectar.
+
+El repositorio no contiene secreto: el state de Terraform, las llaves SSH, los reportes y la
+contraseña de Greenbone se generan o guardan localmente y estan excluidos por '.gitignore'.
