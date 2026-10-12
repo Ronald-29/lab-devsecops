@@ -9,18 +9,20 @@ SHELL := /bin/bash
 GB_COMPOSE ?= /home/ronal/greenbone-community-container/compose.yaml
 GB_PROJECT ?= greenbone-community-edition
 UMBRAL     ?= 7.0
+CRED       ?=
 ESCANER    := greenbone-community-edition-ospd-openvas-1 greenbone-community-edition-openvasd-1
 
-.PHONY: help infra config conectar escanear lab desconectar destruir reconstruir
+.PHONY: help infra config conectar escanear escanear-auth lab desconectar destruir reconstruir
 
 help:
-> @echo "make infra        Terraform: crea la red y los servidores"
-> echo "make config       Ansible: configura y endurece los servidores"
-> echo "make conectar     Ansible: conecta Greenbone a la red del laboratorio"
-> echo "make escanear     Greenbone: escanea y aplica el umbral (UMBRAL=$(UMBRAL))"
-> echo "make lab          Todo lo anterior, en orden"
-> echo "make destruir     Desconecta Greenbone y destruye la infraestructura"
-> echo "make reconstruir  Destruye y vuelve a crear todo desde cero"
+> @echo "make infra          Terraform: crea la red y los servidores"
+> echo "make config         Ansible: configura y endurece los servidores"
+> echo "make conectar       Ansible: conecta Greenbone a la red del laboratorio"
+> echo "make escanear       Greenbone: escaneo no autenticado (UMBRAL=$(UMBRAL))"
+> echo "make escanear-auth  Greenbone: escaneo autenticado con la credencial lab-scanner-ssh"
+> echo "make lab            infra + config + conectar + escanear"
+> echo "make destruir       Desconecta Greenbone y destruye la infraestructura"
+> echo "make reconstruir    Destruye y vuelve a crear todo desde cero"
 
 infra:
 > terraform -chdir=terraform init -input=false
@@ -41,12 +43,15 @@ escanear:
 > hosts=$$(terraform -chdir=terraform output -json servidores | python3 -c 'import json,sys; print(",".join(json.load(sys.stdin).values()))')
 > echo "Objetivos según Terraform: $$hosts"
 > mkdir -p greenbone/reportes
-> archivo=greenbone/reportes/escaneo-$$(date +%Y%m%d-%H%M).txt
+> archivo=greenbone/reportes/escaneo$(if $(CRED),-auth,)-$$(date +%Y%m%d-%H%M).txt
 > docker compose -f $(GB_COMPOSE) -p $(GB_PROJECT) run --rm -T \
 >   -v "$(CURDIR)/greenbone:/scripts:ro" gvm-tools \
 >   gvm-script --gmp-username admin --gmp-password "$$GVM_PASSWORD" \
->   socket /scripts/escanear.py $(UMBRAL) "$$hosts" | tee "$$archivo"
+>   socket /scripts/escanear.py $(UMBRAL) "$$hosts" $(CRED) | tee "$$archivo"
 > echo "Reporte guardado en $$archivo"
+
+escanear-auth:
+> $(MAKE) --no-print-directory escanear CRED=lab-scanner-ssh
 
 lab: infra config conectar escanear
 

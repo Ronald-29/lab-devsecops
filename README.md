@@ -204,3 +204,26 @@ La duración del escaneo bajó de 20 a 11 minutos: menos superficie de ataque, m
 - [x] Agregar `docs/riesgos-aceptados.md`.
 - [x] Prueba final: `make reconstruir; echo "Código de salida: $?"`.
 - [x] Commit y etiqueta `v4-automatizado`.
+
+## Fase 7: escaneos autenticados
+
+Greenbone inicia sesión por SSH con el usuario `scanner` y revisa los paquetes por dentro.
+
+- Llave del escáner generada con `ssh-keygen` fuera de Terraform: pertenece a Greenbone
+  y debe sobrevivir a `make reconstruir`. No se versiona.
+- Usuario `scanner` (rol `common`): sin contraseña, sin `sudo`, solo con llave.
+- Credencial en Greenbone: `lab-scanner-ssh`. Comando: `make escanear-auth`.
+- El script exige login SSH en todos los hosts: si falla, termina con ERROR (código 2).
+
+| Escaneo autenticado | Paquetes | Hallazgos | Severidad máxima | Resultado |
+|---|---|---|---|---|
+| Primero | 529 | 3 | 6.5 Medium | APROBADO |
+| Tras aceptar R-002 | 529 | 0 | 0.0 Log | APROBADO |
+
+Lecciones:
+
+- Ningún paquete vulnerable: `apt upgrade: dist` del hardening funciona.
+- Downfall (GDS) era del host: los contenedores comparten su kernel. Sin parche del
+  fabricante, se aceptó con condiciones (R-002 en `docs/riesgos-aceptados.md`).
+- Un override debe tener Task y Result en Any para aplicar a escaneos futuros.
+- La ausencia de hallazgos no prueba seguridad: hay que confirmar que el escaneo pudo medir.
