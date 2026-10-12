@@ -31,3 +31,26 @@
 - name: Validar la configuración de SSH antes de recargarla
   ansible.builtin.command: /usr/sbin/sshd -t
   changed_when: false
+
+- name: "ESCANEO: usuario de solo lectura para Greenbone"
+  ansible.builtin.user:
+    name: scanner
+    shell: /bin/bash
+    password: "*"
+    create_home: true
+
+- name: "ESCANEO: carpeta .ssh del usuario scanner"
+  ansible.builtin.file:
+    path: /home/scanner/.ssh
+    state: directory
+    owner: scanner
+    group: scanner
+    mode: "0700"
+
+- name: "ESCANEO: autorizar la llave pública de Greenbone"
+  ansible.builtin.copy:
+    dest: /home/scanner/.ssh/authorized_keys
+    content: "{{ lookup('ansible.builtin.file', playbook_dir ~ '/../greenbone/.scanner_key.pub') }}\n"
+    owner: scanner
+    group: scanner
+    mode: "0600"
