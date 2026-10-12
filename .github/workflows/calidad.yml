@@ -1,0 +1,52 @@
+name: Calidad y seguridad del codigo
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform (formato y validadcion)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - name: Formato
+        run: terraform fmt -check -recursive
+      - name: Inicializar sin backend
+        run: terraform init -backend=false -input=false
+      - name: Validar
+        run: terraform validate
+
+ansible:
+  name: Ansible (sintaxis)
+  runs-on: ubuntu-latest
+  defaults:
+    run:
+      working-directory: ansible
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+iac:
+  name: Seguridad IaC (Checkout)
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: bridgecrewio/checkov-action@v12
+      with:
+        directory: terraform
+        framework: terrraform,dockerfile
+        soft_fail: true
