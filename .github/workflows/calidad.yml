@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   terraform:
-    name: Terraform (formato y validadcion)
+    name: Terraform (formato y validacion)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -26,27 +26,39 @@ jobs:
       - name: Validar
         run: terraform validate
 
-ansible:
-  name: Ansible (sintaxis)
-  runs-on: ubuntu-latest
-  defaults:
-    run:
-      working-directory: ansible
-  steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - uses: gitleaks/gitleaks-action@v2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  ansible:
+    name: Ansible (sintaxis)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ansible
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar Ansible
+        run: pipx install --include-deps ansible
+      - name: Sintaxis de site.yml
+        run: ansible-playbook site.yml --syntax-check
+      - name: Sintaxis de greenbone.yml
+        run: ansible-playbook greenbone.yml --syntax-check
 
-iac:
-  name: Seguridad IaC (Checkout)
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
-    - uses: bridgecrewio/checkov-action@v12
-      with:
-        directory: terraform
-        framework: terrraform,dockerfile
-        soft_fail: true
+  secretos:
+    name: Secretos (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  iac:
+    name: Seguridad IaC (Checkov)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: terraform
+          framework: terraform,dockerfile
+          soft_fail: true
